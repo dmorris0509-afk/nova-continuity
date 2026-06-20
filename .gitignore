@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+
+# SQLite databases
+*.db
+
+# macOS
+.DS_Store
+
+# Cursor
+.cursor/
+
