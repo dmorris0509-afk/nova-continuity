@@ -1,39 +1,78 @@
 # Acceptance Tests
 
-## Continuity Substrate Proof
+## v0.0 — Continuity Exists
 
-A user can:
+### Test 1: Create Event
+Steps:
+1. POST /events?name=RootEvent
 
+Expected:
+- Event is created
+- Event receives a unique ID
+- Event is persisted
+
+Status: PASSED ✅
+
+---
+
+### Test 2: Timeline Retrieval
+Steps:
 1. Create an event
-2. View it in a timeline
-3. Click it
-4. Inspect its lineage
-5. Issue a receipt
-6. Edit a file
-7. See that file change represented as continuity
+2. GET /events
 
-If all seven actions work, the continuity substrate is proven.
+Expected:
+- Event appears in timeline output
 
-## v0.0
+Status: PASSED ✅
 
-* [ ] Create Event
-* [ ] View Timeline
-* [ ] Inspect Lineage
+---
 
-## v0.1
+### Test 3: Lineage Traversal
+Steps:
+1. Create RootEvent
+2. Create ChildEvent with parentId=RootEvent.id
+3. GET /lineage/{ChildEvent.id}
 
-* [ ] Issue Receipt
-* [ ] View Receipts
+Expected:
+- ChildEvent returned
+- RootEvent returned
+- Correct parent-child chain reconstructed
 
-## v0.2
+Status: PASSED ✅
 
-* [ ] Open File
-* [ ] Edit File
-* [ ] Save File
-* [ ] File Save Creates Event
-* [ ] File Event Appears In Timeline
+---
 
-## Success Condition
+## v0.1 — Receipts
 
-All checkboxes complete and demonstrable in a single workflow.
+Status: NOT IMPLEMENTED
 
+---
+
+## v0.2 — File Continuity
+
+Status: NOT IMPLEMENTED
+
+---
+
+## Current Acceptance Summary
+
+- [x] Create Event
+- [x] View Timeline
+- [x] Inspect Lineage
+- [ ] Issue Receipt
+- [ ] View Receipts
+- [ ] Open File
+- [ ] Save File
+- [ ] File Save Creates Event
+- [ ] File History Forms Lineage
+
+Continuity Proof:
+
+RootEvent
+  ↑
+ChildEvent
+
+Event → Timeline → Lineage
+
+Status: v0.0 PASSED
+Date: 2026-06-20
