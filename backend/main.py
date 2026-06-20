@@ -19,12 +19,25 @@ app.add_middleware(
 conn = sqlite3.connect("events.db", check_same_thread=False)
 cur = conn.cursor()
 
+# Events Table
+
 cur.execute("""
 CREATE TABLE IF NOT EXISTS events (
     id TEXT PRIMARY KEY,
     timestamp INTEGER NOT NULL,
     name TEXT NOT NULL,
     parentId TEXT
+)
+""")
+
+# Receipts Table
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS receipts (
+    id TEXT PRIMARY KEY,
+    eventId TEXT NOT NULL,
+    status TEXT NOT NULL,
+    details TEXT NOT NULL
 )
 """)
 
@@ -52,7 +65,7 @@ def create_event(name: str, parentId: str | None = None):
         "id": event_id,
         "timestamp": timestamp,
         "name": name,
-        "parentId": parentId
+        "parentId": parentId,
     }
 
 
@@ -73,7 +86,7 @@ def list_events():
             "id": row[0],
             "timestamp": row[1],
             "name": row[2],
-            "parentId": row[3]
+            "parentId": row[3],
         }
         for row in rows
     ]
@@ -106,7 +119,57 @@ def get_lineage(event_id: str):
             "id": row[0],
             "timestamp": row[1],
             "name": row[2],
-            "parentId": row[3]
+            "parentId": row[3],
+        }
+        for row in rows
+    ]
+
+
+# Issue Receipt
+
+@app.post("/events/{event_id}/receipt")
+def issue_receipt(
+    event_id: str,
+    status: str = "PASS",
+    details: str = "Receipt issued",
+):
+    receipt_id = str(uuid.uuid4())
+
+    cur.execute(
+        """
+        INSERT INTO receipts (id, eventId, status, details)
+        VALUES (?, ?, ?, ?)
+        """,
+        (receipt_id, event_id, status, details),
+    )
+
+    conn.commit()
+
+    return {
+        "id": receipt_id,
+        "eventId": event_id,
+        "status": status,
+        "details": details,
+    }
+
+
+# View Receipts
+
+@app.get("/receipts")
+def list_receipts():
+    rows = cur.execute(
+        """
+        SELECT id, eventId, status, details
+        FROM receipts
+        """
+    ).fetchall()
+
+    return [
+        {
+            "id": row[0],
+            "eventId": row[1],
+            "status": row[2],
+            "details": row[3],
         }
         for row in rows
     ]
