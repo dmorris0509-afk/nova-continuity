@@ -223,12 +223,30 @@ def open_file(path: str):
     }
 # File Save
 
+# File Save
+
 @app.post("/file/save")
 def save_file(path: str, content: str):
     timestamp = int(time.time())
 
     with open(path, "w") as f:
         f.write(content)
+
+    row = cur.execute(
+        """
+        SELECT eventId
+        FROM file_events
+        WHERE path = ?
+        ORDER BY timestamp DESC
+        LIMIT 1
+        """,
+        (path,)
+    ).fetchone()
+
+    parent_id = None
+
+    if row:
+        parent_id = row[0]
 
     event_id = str(uuid.uuid4())
 
@@ -237,7 +255,7 @@ def save_file(path: str, content: str):
         INSERT INTO events (id, timestamp, name, parentId)
         VALUES (?, ?, ?, ?)
         """,
-        (event_id, timestamp, "File.Saved", None)
+        (event_id, timestamp, "File.Saved", parent_id)
     )
 
     file_event_id = str(uuid.uuid4())
@@ -255,6 +273,6 @@ def save_file(path: str, content: str):
     return {
         "eventId": event_id,
         "path": path,
-        "status": "saved"
-    
+        "status": "saved",
+        "parentId": parent_id
     }
