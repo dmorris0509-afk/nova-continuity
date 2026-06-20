@@ -1,4 +1,3 @@
-import FileControls from "../components/file/FileControls";
 import FileEditor from "../components/file/FileEditor";
 
 import Timeline from "../components/continuity/Timeline";
