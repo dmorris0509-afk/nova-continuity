@@ -40,7 +40,16 @@ CREATE TABLE IF NOT EXISTS receipts (
     details TEXT NOT NULL
 )
 """)
+# File Events Table
 
+cur.execute("""
+CREATE TABLE IF NOT EXISTS file_events (
+    id TEXT PRIMARY KEY,
+    eventId TEXT NOT NULL,
+    path TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+)
+""")
 conn.commit()
 
 
@@ -173,3 +182,79 @@ def list_receipts():
         }
         for row in rows
     ]
+# File Open
+
+@app.post("/file/open")
+def open_file(path: str):
+    timestamp = int(time.time())
+
+    event_id = str(uuid.uuid4())
+
+    cur.execute(
+        """
+        INSERT INTO events (id, timestamp, name, parentId)
+        VALUES (?, ?, ?, ?)
+        """,
+        (event_id, timestamp, "File.Opened", None)
+    )
+
+    file_event_id = str(uuid.uuid4())
+
+    cur.execute(
+        """
+        INSERT INTO file_events (id, eventId, path, timestamp)
+        VALUES (?, ?, ?, ?)
+        """,
+        (file_event_id, event_id, path, timestamp)
+    )
+
+    conn.commit()
+
+    try:
+        with open(path, "r") as f:
+            content = f.read()
+    except FileNotFoundError:
+        content = ""
+
+    return {
+        "eventId": event_id,
+        "path": path,
+        "content": content
+    }
+# File Save
+
+@app.post("/file/save")
+def save_file(path: str, content: str):
+    timestamp = int(time.time())
+
+    with open(path, "w") as f:
+        f.write(content)
+
+    event_id = str(uuid.uuid4())
+
+    cur.execute(
+        """
+        INSERT INTO events (id, timestamp, name, parentId)
+        VALUES (?, ?, ?, ?)
+        """,
+        (event_id, timestamp, "File.Saved", None)
+    )
+
+    file_event_id = str(uuid.uuid4())
+
+    cur.execute(
+        """
+        INSERT INTO file_events (id, eventId, path, timestamp)
+        VALUES (?, ?, ?, ?)
+        """,
+        (file_event_id, event_id, path, timestamp)
+    )
+
+    conn.commit()
+
+    return {
+        "eventId": event_id,
+        "path": path,
+        "status": "saved"
+    
+    }
